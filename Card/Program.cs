@@ -89,7 +89,7 @@ namespace Card
             Shuffle(_deck);
         }
 
-        public void Shuffle(List<Card> cards)
+        private void Shuffle(List<Card> cards)
         {
             for (int i = 0; i < _deck.Count; i++)
             {
@@ -111,7 +111,7 @@ namespace Card
             _cardValue = cardValue;
         }
 
-        public void ShowInfo() 
+        public void ShowInfo()
         {
             Console.WriteLine($"Масть карты {_cardSuit}, значение карты {_cardValue}");
         }
