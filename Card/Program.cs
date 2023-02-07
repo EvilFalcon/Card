@@ -23,16 +23,20 @@ namespace Card
         {
             const string CommandGetCard = "1";
             const string CommandShowInfoCard = "2";
-            const string CommandExitGame = "3";
+            const string CommandTakeCard = "3";
+            const string CommandExitGame = "4";
 
             bool isWork = true;
 
-            Console.WriteLine($"{CommandGetCard} взять карту ");
-            Console.WriteLine($"{CommandShowInfoCard} посмотреть какие карты в руке");
-            Console.WriteLine($"{CommandExitGame} выход из игры ");
 
             while (isWork)
             {
+                Console.Clear();
+                Console.WriteLine($"{CommandGetCard} взять карту ");
+                Console.WriteLine($"{CommandShowInfoCard} посмотреть какие карты в руке");
+                Console.WriteLine($"{CommandTakeCard} вернуть карты в колоду");
+                Console.WriteLine($"{CommandExitGame} выход из игры ");
+
                 switch (Console.ReadLine())
                 {
                     case CommandGetCard:
@@ -43,14 +47,21 @@ namespace Card
                         _player.ShowInfoCard();
                         break;
 
+                    case CommandTakeCard:
+                        _player.ReturnCards();
+                        break;
+
                     case CommandExitGame:
                         isWork = false;
                         break;
 
                     default:
-                        Console.WriteLine("");
+                        Console.WriteLine("Неверный ввод");
                         break;
                 }
+
+                Console.WriteLine("Нажмите любую кнопку для продолжения");
+                Console.ReadLine();
             }
         }
     }
@@ -59,13 +70,6 @@ namespace Card
         private static Random random = new Random();
 
         private List<Card> _deck = new List<Card>();
-
-        public Card GiveCard()
-        {
-            Card temporaryCard = _deck.Last();
-            _deck.Remove(temporaryCard);
-            return temporaryCard;
-        }
 
         public CardDeck()
         {
@@ -87,6 +91,26 @@ namespace Card
             }
 
             Shuffle(_deck);
+        }
+
+        public Card GiveCard()
+        {
+            if (_deck.Count != 0)
+            {
+                Card temporaryCard = _deck.Last();
+                _deck.Remove(temporaryCard);
+                return temporaryCard;
+            }
+            else
+            {
+                Console.WriteLine("карты закончились в колоде! верните карты в колоду ");
+                return null;
+            }
+        }
+
+        public void TakeCards(Card card)
+        {
+            _deck.Add(card);
         }
 
         private void Shuffle(List<Card> cards)
@@ -124,12 +148,39 @@ namespace Card
 
         public void GetCard()
         {
-            _hand.Add(_deck.GiveCard());
+            Card temporaryCard = _deck.GiveCard();
+            if (temporaryCard != null)
+            {
+                _hand.Add(temporaryCard);
+            }
+        }
+
+        public void ReturnCards()
+        {
+            Card[] cards = new Card[_hand.Count];
+
+            if (_hand.Count != 0)
+            {
+                foreach (Card card in _hand)
+                {
+                    _deck.TakeCards(card);
+
+                }
+
+                for (int i = 0; i < _hand.Count; i++)
+                {
+                    _hand.RemoveAt(i);
+                }
+            }
+            else
+            {
+                Console.WriteLine("у вас нет кард");
+            }
         }
 
         public void ShowInfoCard()
         {
-            foreach (Card card in _hand)
+            foreach (var card in _hand)
             {
                 card.ShowInfo();
             }
