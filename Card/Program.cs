@@ -17,6 +17,7 @@ namespace Card
     class Casino
     {
         private Player _player = new Player();
+        private Deck _deck = new Deck();
         public void PlayGame()
         {
             const string CommandGetCard = "1";
@@ -66,30 +67,13 @@ namespace Card
 
     class Deck
     {
-        private static Random random = new Random();
+       
 
         private List<Card> _cards = new List<Card>();
 
         public Deck()
         {
             FillDeck();
-        }
-
-        private void FillDeck()
-        {
-            List<string> cardsValue = new List<string> { "T", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "D", "K" };
-            List<string> cardsSuit = new List<string> { "♣", "♠", "♥", "♦" };
-
-            for (int i = 0; i < cardsValue.Count; i++)
-            {
-                for (int j = 0; j < cardsSuit.Count; j++)
-                {
-                    Card card = new Card(cardsSuit[j], cardsValue[i]);
-                    _cards.Add(card);
-                }
-            }
-
-            Shuffle(_cards);
         }
 
         public Card GiveCard()
@@ -112,13 +96,31 @@ namespace Card
             _cards.Add(card);
         }
 
+        private void FillDeck()
+        {
+            List<string> cardsValue = new List<string> { "T", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "D", "K" };
+            List<string> cardsSuit = new List<string> { "♣", "♠", "♥", "♦" };
+
+            for (int i = 0; i < cardsValue.Count; i++)
+            {
+                for (int j = 0; j < cardsSuit.Count; j++)
+                {
+                    Card card = new Card(cardsSuit[j], cardsValue[i]);
+                    _cards.Add(card);
+                }
+            }
+
+            Shuffle(_cards);
+        }
+
         private void Shuffle(List<Card> cards)
         {
+            Random random = new Random();
+
             for (int i = 0; i < _cards.Count; i++)
             {
                 int indexCard = random.Next(_cards.Count);
                 (_cards[i], _cards[indexCard]) = (_cards[indexCard], _cards[i]);
-
             }
         }
     }
