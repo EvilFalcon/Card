@@ -64,13 +64,13 @@ namespace Card
         }
     }
 
-    class CardDeck
+    class Deck
     {
         private static Random random = new Random();
 
-        private List<Card> _deck = new List<Card>();
+        private List<Card> _cards = new List<Card>();
 
-        public CardDeck()
+        public Deck()
         {
             FillDeck();
         }
@@ -85,19 +85,19 @@ namespace Card
                 for (int j = 0; j < cardsSuit.Count; j++)
                 {
                     Card card = new Card(cardsSuit[j], cardsValue[i]);
-                    _deck.Add(card);
+                    _cards.Add(card);
                 }
             }
 
-            Shuffle(_deck);
+            Shuffle(_cards);
         }
 
         public Card GiveCard()
         {
-            if (_deck.Count != 0)
+            if (_cards.Count != 0)
             {
-                Card temporaryCard = _deck.Last();
-                _deck.Remove(temporaryCard);
+                Card temporaryCard = _cards.Last();
+                _cards.Remove(temporaryCard);
                 return temporaryCard;
             }
             else
@@ -109,15 +109,15 @@ namespace Card
 
         public void TakeCards(Card card)
         {
-            _deck.Add(card);
+            _cards.Add(card);
         }
 
         private void Shuffle(List<Card> cards)
         {
-            for (int i = 0; i < _deck.Count; i++)
+            for (int i = 0; i < _cards.Count; i++)
             {
-                int indexCard = random.Next(_deck.Count);
-                (_deck[i], _deck[indexCard]) = (_deck[indexCard], _deck[i]);
+                int indexCard = random.Next(_cards.Count);
+                (_cards[i], _cards[indexCard]) = (_cards[indexCard], _cards[i]);
 
             }
         }
@@ -125,25 +125,25 @@ namespace Card
 
     class Card
     {
-        private string _cardSuit;
-        private string _cardValue;
+        private string _suit;
+        private string _value;
 
-        public Card(string cardSuit, string cardValue)
+        public Card(string suit, string value)
         {
-            _cardSuit = cardSuit;
-            _cardValue = cardValue;
+            _suit = suit;
+            _value = value;
         }
 
         public void ShowInfo()
         {
-            Console.WriteLine($"Масть карты {_cardSuit}, значение карты {_cardValue}");
+            Console.WriteLine($"Масть карты {_suit}, значение карты {_value}");
         }
     }
 
     class Player
     {
         private List<Card> _hand = new List<Card>();
-        private CardDeck _deck = new CardDeck();
+        private Deck _deck = new Deck();
 
         public void GetCard()
         {
