@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Linq;  
 
 namespace Card
 {
@@ -63,6 +63,7 @@ namespace Card
             }
         }
     }
+
     class CardDeck
     {
         private static Random random = new Random();
