@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;  
+using System.Linq;
 
 namespace Card
 {
@@ -10,20 +10,29 @@ namespace Card
         {
             Casino casino = new Casino();
 
+            casino.StartNewRound();
             casino.PlayGame();
         }
     }
 
     class Casino
     {
+        private int _deckCount;
         private Player _player = new Player();
-        private Deck _deck = new Deck();
+        private Dealer _dealer = new Dealer();
+        private Deck _deck;
+        private Dictionary<string, int> _blackJackPoints;
+
+        public Casino()
+        {
+            _blackJackPoints = CreateBlackJackPoints();
+        } 
+
         public void PlayGame()
         {
             const string CommandGetCard = "1";
             const string CommandShowInfoCard = "2";
-            const string CommandTakeCard = "3";
-            const string CommandExitGame = "4";
+            const string CommandExitGame = "3";
 
             bool isWork = true;
 
@@ -33,21 +42,16 @@ namespace Card
                 Console.Clear();
                 Console.WriteLine($"{CommandGetCard} взять карту ");
                 Console.WriteLine($"{CommandShowInfoCard} посмотреть какие карты в руке");
-                Console.WriteLine($"{CommandTakeCard} вернуть карты в колоду");
                 Console.WriteLine($"{CommandExitGame} выход из игры ");
 
                 switch (Console.ReadLine())
                 {
                     case CommandGetCard:
-                        _player.GetCard();
+                        _player.GetCard(_deck.GiveCard());
                         break;
 
                     case CommandShowInfoCard:
-                        _player.ShowInfoCard();
-                        break;
-
-                    case CommandTakeCard:
-                        _player.ReturnCards();
+                        _player.ShowCardsPlayerInfo();
                         break;
 
                     case CommandExitGame:
@@ -59,22 +63,160 @@ namespace Card
                         break;
                 }
 
-                Console.WriteLine("Нажмите любую кнопку для продолжения");
-                Console.ReadLine();
+                WalksTheDealer();
             }
         }
+
+        public void StartNewRound()
+        {
+            SetDecksCount();
+
+            GiveNewDecks();
+
+            GiveStarterCardSet();
+        }
+
+        private Dictionary<string, int> CreateBlackJackPoints()
+        {
+            Dictionary<string,int> blackJackPoints = new Dictionary<string, int>
+            {
+                ["T"] = 11,
+                ["2"] = 2,
+                ["3"] = 3,
+                ["4"] = 4,
+                ["5"] = 5,
+                ["6"] = 6,
+                ["7"] = 7,
+                ["8"] = 8,
+                ["9"] = 9,
+                ["10"] = 10,
+                ["J"] = 10,
+                ["D"] = 10,
+                ["K"] = 10
+
+            };
+
+            return blackJackPoints;
+        }
+
+        private void WalksTheDealer()
+        {
+            _dealer.ShowCardDealerInfo();
+
+            if (_dealer.PointCards <= 16)
+            {
+                _dealer.GetCard(_deck.GiveCard());
+            }
+
+            Console.WriteLine("Нажмите любую кнопку для продолжения");
+            Console.ReadLine();
+        }
+
+        private void StartNextRound()
+        {
+            int lowerLimitDecks = _deck.GetCardsCount / 3;
+
+            if (_deck.GetCardsCount <= lowerLimitDecks)
+            {
+                _player.ReturnCards();
+                GiveNewDecks();
+
+            }
+        }
+
+        private void GivePoints()
+        {
+
+        }
+
+        private void GiveNewDecks()
+        {
+            for (int i = 0; i < _deckCount; i++)
+            {
+                _deck = new Deck();
+            }
+        }
+
+        private void GiveStarterCardSet()
+        {
+            int kitCard = 2;
+
+            for (int i = kitCard; i == 0; i--)
+            {
+                _player.GetCard(_deck.GiveCard());
+            }
+        }
+
+        private void SetDecksCount()
+        {
+
+            int tmpCount = GetDeckCount();
+
+            _deckCount = tmpCount;
+        }
+
+        private static int GetDeckCount()
+        {
+            ConsoleKey decreaseKeyCommand = ConsoleKey.LeftArrow;
+            ConsoleKey increaseKeyCommand = ConsoleKey.RightArrow;
+            ConsoleKey inputKeyCommand = ConsoleKey.Enter;
+
+            int maxCount = 8;
+            int minCount = 1;
+            int tmpCount = 1;
+            bool isSelectedGameMode = false;
+
+            while (isSelectedGameMode == false)
+            {
+                ShowInfoDeckCount(tmpCount, inputKeyCommand, increaseKeyCommand, decreaseKeyCommand);
+
+                ConsoleKeyInfo pressedKey = Console.ReadKey();
+
+                if (decreaseKeyCommand == pressedKey.Key && tmpCount < minCount)
+                {
+                    tmpCount--;
+                }
+                else if (increaseKeyCommand == pressedKey.Key && tmpCount > maxCount)
+                {
+                    tmpCount++;
+                }
+                else if (inputKeyCommand == pressedKey.Key && minCount <= tmpCount || tmpCount <= maxCount)
+                {
+                    isSelectedGameMode = true;
+                }
+
+            }
+
+            return tmpCount;
+        }
+
+        private static void ShowInfoDeckCount(int count, ConsoleKey inputKey, ConsoleKey increaseKey, ConsoleKey decreaseKey)
+        {
+            int maxCountCard = 52 * count;
+
+            Console.WriteLine($"Управление количеством колод!\nУменьшить количество колод :{decreaseKey}\nУвеличить количество колод {increaseKey}\nПодтвердить выбор режима {increaseKey}");
+            Console.WriteLine($"Режим с {maxCountCard} катры/ми, или {count}: колода/ми! ");
+
+
+        }
+
     }
 
     class Deck
     {
-       
+        private List<string> _cardsValue = new List<string> { "T", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "D", "K" };
+        private List<string> _cardsSuit = new List<string> { "♣", "♠", "♥", "♦" };
 
         private List<Card> _cards = new List<Card>();
 
         public Deck()
         {
-            FillDeck();
+            Fill();
         }
+
+        public List<string> CardsValue { get; private set; }
+
+        public int GetCardsCount => _cards.Count();
 
         public Card GiveCard()
         {
@@ -91,29 +233,22 @@ namespace Card
             }
         }
 
-        public void TakeCards(Card card)
+        private void Fill()
         {
-            _cards.Add(card);
-        }
 
-        private void FillDeck()
-        {
-            List<string> cardsValue = new List<string> { "T", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "D", "K" };
-            List<string> cardsSuit = new List<string> { "♣", "♠", "♥", "♦" };
-
-            for (int i = 0; i < cardsValue.Count; i++)
+            for (int i = 0; i < _cardsValue.Count; i++)
             {
-                for (int j = 0; j < cardsSuit.Count; j++)
+                for (int j = 0; j < _cardsSuit.Count; j++)
                 {
-                    Card card = new Card(cardsSuit[j], cardsValue[i]);
+                    Card card = new Card(_cardsSuit[j], _cardsValue[i]);
                     _cards.Add(card);
                 }
             }
 
-            Shuffle(_cards);
+            Shuffle();
         }
 
-        private void Shuffle(List<Card> cards)
+        public void Shuffle()
         {
             Random random = new Random();
 
@@ -123,6 +258,7 @@ namespace Card
                 (_cards[i], _cards[indexCard]) = (_cards[indexCard], _cards[i]);
             }
         }
+
     }
 
     class Card
@@ -136,20 +272,47 @@ namespace Card
             _value = value;
         }
 
+        public string Value => _value;
+
         public void ShowInfo()
         {
-            Console.WriteLine($"Масть карты {_suit}, значение карты {_value}");
+
+            Console.WriteLine($"  {_suit}         |       {_value}       ");
+        }
+
+        public void ShowInfo(Card card)
+        {
+
+            Console.WriteLine($"  {_suit}         |       {_value}       ");
         }
     }
 
-    class Player
+    abstract class Person
     {
-        private List<Card> _hand = new List<Card>();
-        private Deck _deck = new Deck();
+        private int _pointCards = 0;
 
-        public void GetCard()
+        private  List<Card> _hand = new List<Card>();
+
+        //private List<Card> Hand =>  new List<Card>(_hand);
+
+        public bool HaveNotCards
         {
-            Card temporaryCard = _deck.GiveCard();
+            get
+            {
+                return _hand.Count() == 0;
+            }
+        }
+
+        public int PointCards => _pointCards;
+
+        public void ScorePoints(int pointsCards)
+        {
+            _pointCards += pointsCards;
+        }
+
+        public void GetCard(Card card)
+        {
+            Card temporaryCard = card;
             if (temporaryCard != null)
             {
                 _hand.Add(temporaryCard);
@@ -158,33 +321,47 @@ namespace Card
 
         public void ReturnCards()
         {
-            Card[] cards = new Card[_hand.Count];
-
             if (_hand.Count != 0)
             {
-                foreach (Card card in _hand)
-                {
-                    _deck.TakeCards(card);
-
-                }
-
-                for (int i = 0; i < _hand.Count; i++)
-                {
-                    _hand.RemoveAt(i);
-                }
+                _hand.Clear();
             }
             else
             {
-                Console.WriteLine("у вас нет кард");
+                Console.WriteLine("У вас нет кард");
             }
         }
 
-        public void ShowInfoCard()
+        public void ShowCardsPlayerInfo()
         {
+            Console.WriteLine("Масть карты  |Значение карты");
+
             foreach (var card in _hand)
             {
                 card.ShowInfo();
             }
         }
+
+        public void ShowCardDealerInfo()
+        {
+            _hand[0].ShowInfo();
+        }
+
+
+    }
+
+    class Player : Person
+    {
+        
+    }
+
+    class Dealer : Person
+    {
+        public void ShowCardDealerInfo()
+        {
+            Console.WriteLine("Масть карты  |Значение карты");
+
+            Hand[0].ShowInfo();
+        }
     }
 }
+//if (temporaryCard.Value == "T")
