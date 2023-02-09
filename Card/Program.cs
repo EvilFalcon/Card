@@ -26,7 +26,7 @@ namespace Card
         public Casino()
         {
             _blackJackPoints = CreateBlackJackPoints();
-        } 
+        }
 
         public void PlayGame()
         {
@@ -78,7 +78,7 @@ namespace Card
 
         private Dictionary<string, int> CreateBlackJackPoints()
         {
-            Dictionary<string,int> blackJackPoints = new Dictionary<string, int>
+            Dictionary<string, int> blackJackPoints = new Dictionary<string, int>
             {
                 ["T"] = 11,
                 ["2"] = 2,
@@ -279,21 +279,13 @@ namespace Card
 
             Console.WriteLine($"  {_suit}         |       {_value}       ");
         }
-
-        public void ShowInfo(Card card)
-        {
-
-            Console.WriteLine($"  {_suit}         |       {_value}       ");
-        }
     }
 
     abstract class Person
     {
         private int _pointCards = 0;
 
-        private  List<Card> _hand = new List<Card>();
-
-        //private List<Card> Hand =>  new List<Card>(_hand);
+        private List<Card> _hand = new List<Card>();
 
         public bool HaveNotCards
         {
@@ -333,17 +325,25 @@ namespace Card
 
         public void ShowCardsPlayerInfo()
         {
-            Console.WriteLine("Масть карты  |Значение карты");
-
-            foreach (var card in _hand)
+            if (HaveNotCards == false)
             {
-                card.ShowInfo();
+                Console.WriteLine("Масть карты  |Значение карты");
+
+                foreach (var card in _hand)
+                {
+                    card.ShowInfo();
+                }
             }
         }
 
         public void ShowCardDealerInfo()
         {
-            _hand[0].ShowInfo();
+            if (HaveNotCards==false)
+            {
+                Console.WriteLine("Масть карты   |Значение карты");
+
+                _hand[0].ShowInfo();
+            }
         }
 
 
@@ -351,17 +351,17 @@ namespace Card
 
     class Player : Person
     {
-        
+
     }
 
     class Dealer : Person
     {
-        public void ShowCardDealerInfo()
-        {
-            Console.WriteLine("Масть карты  |Значение карты");
 
-            Hand[0].ShowInfo();
-        }
     }
 }
-//if (temporaryCard.Value == "T")
+//////if (temporaryCard.Value == "T")
+//сделать  начисление очков 
+//добавить условия победы, поражения и сделать ничью
+//добавить ставки и сделать страховку 
+//сделать условие хода дилера 
+/////
