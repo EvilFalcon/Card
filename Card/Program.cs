@@ -12,7 +12,6 @@ namespace Card
 
             casino.StartNewRound();
             casino.PlayGame();
-
         }
     }
 
@@ -36,7 +35,6 @@ namespace Card
             const string CommandExitGame = "4";
 
             bool isWork = true;
-
 
             while (isWork)
             {
@@ -67,8 +65,11 @@ namespace Card
                 }
 
 
-
+                if (AssignVictory())
+                {
                 StartNextRound();
+
+                }
                 Console.WriteLine("Нажмите любую кнопку для продолжения");
                 Console.ReadLine();
             }
@@ -80,9 +81,10 @@ namespace Card
             GetAllPoints(_player);
         }
 
-        private void AssignVictory()
+        private bool AssignVictory()
         {
 
+            return;
         }
 
         public void StartNewRound()
@@ -240,7 +242,6 @@ namespace Card
                 {
                     isSelectedGameMode = true;
                 }
-
             }
 
             return tmpCount;
@@ -432,15 +433,10 @@ namespace Card
 
     class Player : Person
     {
-        int _bank = 100000;
-
-
-
     }
 
     class Dealer : Person
     {
-
     }
 }
 
