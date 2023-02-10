@@ -6,16 +6,17 @@ namespace Card
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
-            Casino casino = new Casino();
+            BlackJack casino = new BlackJack();
 
             casino.StartNewRound();
             casino.PlayGame();
+
         }
     }
 
-    class Casino
+    class BlackJack
     {
         private int _deckCount;
         private Player _player = new Player();
@@ -23,7 +24,7 @@ namespace Card
         private Deck _deck;
         private Dictionary<string, int> _blackJackPoints;
 
-        public Casino()
+        public BlackJack()
         {
             _blackJackPoints = CreateBlackJackPoints();
         }
@@ -31,8 +32,8 @@ namespace Card
         public void PlayGame()
         {
             const string CommandGetCard = "1";
-            const string CommandShowInfoCard = "2";
-            const string CommandExitGame = "3";
+            const string CommandPassTheMove = "2";
+            const string CommandExitGame = "4";
 
             bool isWork = true;
 
@@ -40,18 +41,20 @@ namespace Card
             while (isWork)
             {
                 Console.Clear();
+                _player.ShowCardsPlayerInfo();
+                _dealer.ShowCardDealerInfo();
                 Console.WriteLine($"{CommandGetCard} взять карту ");
-                Console.WriteLine($"{CommandShowInfoCard} посмотреть какие карты в руке");
+                Console.WriteLine($"{CommandPassTheMove} Передать ход");
                 Console.WriteLine($"{CommandExitGame} выход из игры ");
 
                 switch (Console.ReadLine())
                 {
                     case CommandGetCard:
-                        _player.GetCard(_deck.GiveCard());
+                        RunThePlayer();
                         break;
 
-                    case CommandShowInfoCard:
-                        _player.ShowCardsPlayerInfo();
+                    case CommandPassTheMove:
+                        RunTheDealer();
                         break;
 
                     case CommandExitGame:
@@ -63,18 +66,40 @@ namespace Card
                         break;
                 }
 
-                WalksTheDealer();
+
+
+                StartNextRound();
+                Console.WriteLine("Нажмите любую кнопку для продолжения");
+                Console.ReadLine();
             }
+        }
+
+        private void RunThePlayer()
+        {
+            _player.GetCard(_deck.GiveCard());
+            GetAllPoints(_player);
+        }
+
+        private void AssignVictory()
+        {
+
         }
 
         public void StartNewRound()
         {
-            SetDecksCount();
+            
+                SetDecksCount();
 
-            GiveNewDecks();
+                GiveNewDecks();
 
-            GiveStarterCardSet();
+                GiveStarterCardSet();
+
+                GetAllPoints(_player);
+
+                GetAllPoints(_dealer);
+            
         }
+
 
         private Dictionary<string, int> CreateBlackJackPoints()
         {
@@ -93,23 +118,52 @@ namespace Card
                 ["J"] = 10,
                 ["D"] = 10,
                 ["K"] = 10
-
             };
 
             return blackJackPoints;
         }
 
-        private void WalksTheDealer()
+        private void GetAllPoints(Person person)
+        {
+            int points = 0;
+            int cardsCount = person.CardsCount;
+            bool isAce = false;
+
+            for (int i = 0; i < cardsCount; i++)
+            {
+                string value = person.GetCardValue(i);
+
+                if (value != "T")
+                {
+                    points += _blackJackPoints[value];
+                }
+                else if (value == "T" && isAce == false)
+                {
+                    points += _blackJackPoints[value];
+                    isAce = true;
+                }
+                else if (value == "T" && isAce == true)
+                {
+                    points += 1;
+                }
+            }
+
+            person.ScorePoints(points);
+        }
+
+        private void RunTheDealer()
         {
             _dealer.ShowCardDealerInfo();
 
-            if (_dealer.PointCards <= 16)
+            const int minThreshold = 17;
+
+            while (_dealer.PointCards < minThreshold)
             {
+
                 _dealer.GetCard(_deck.GiveCard());
+                GetAllPoints(_dealer);
             }
 
-            Console.WriteLine("Нажмите любую кнопку для продолжения");
-            Console.ReadLine();
         }
 
         private void StartNextRound()
@@ -118,7 +172,8 @@ namespace Card
 
             if (_deck.GetCardsCount <= lowerLimitDecks)
             {
-                _player.ReturnCards();
+                _dealer.FoldCards();
+                _player.FoldCards();
                 GiveNewDecks();
 
             }
@@ -131,19 +186,18 @@ namespace Card
 
         private void GiveNewDecks()
         {
-            for (int i = 0; i < _deckCount; i++)
-            {
-                _deck = new Deck();
-            }
+            _deck = new Deck(_deckCount);
+
         }
 
         private void GiveStarterCardSet()
         {
             int kitCard = 2;
 
-            for (int i = kitCard; i == 0; i--)
+            for (int i = 0; i < kitCard; i++)
             {
                 _player.GetCard(_deck.GiveCard());
+                _dealer.GetCard(_deck.GiveCard());
             }
         }
 
@@ -168,19 +222,21 @@ namespace Card
 
             while (isSelectedGameMode == false)
             {
+                Console.Clear();
                 ShowInfoDeckCount(tmpCount, inputKeyCommand, increaseKeyCommand, decreaseKeyCommand);
+
 
                 ConsoleKeyInfo pressedKey = Console.ReadKey();
 
-                if (decreaseKeyCommand == pressedKey.Key && tmpCount < minCount)
+                if (decreaseKeyCommand == pressedKey.Key && tmpCount > minCount)
                 {
                     tmpCount--;
                 }
-                else if (increaseKeyCommand == pressedKey.Key && tmpCount > maxCount)
+                else if (increaseKeyCommand == pressedKey.Key && tmpCount < maxCount)
                 {
                     tmpCount++;
                 }
-                else if (inputKeyCommand == pressedKey.Key && minCount <= tmpCount || tmpCount <= maxCount)
+                else if (inputKeyCommand == pressedKey.Key && minCount <= tmpCount && tmpCount <= maxCount)
                 {
                     isSelectedGameMode = true;
                 }
@@ -204,15 +260,21 @@ namespace Card
 
     class Deck
     {
+
         private List<string> _cardsValue = new List<string> { "T", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "D", "K" };
         private List<string> _cardsSuit = new List<string> { "♣", "♠", "♥", "♦" };
+        private int _deckCount;
 
         private List<Card> _cards = new List<Card>();
 
-        public Deck()
+        public Deck(int deckCount)
         {
+            _deckCount = deckCount;
             Fill();
         }
+
+
+
 
         public List<string> CardsValue { get; private set; }
 
@@ -236,19 +298,22 @@ namespace Card
         private void Fill()
         {
 
-            for (int i = 0; i < _cardsValue.Count; i++)
+            for (int k = 0; k < _deckCount; k++)
             {
-                for (int j = 0; j < _cardsSuit.Count; j++)
+                for (int i = 0; i < _cardsValue.Count; i++)
                 {
-                    Card card = new Card(_cardsSuit[j], _cardsValue[i]);
-                    _cards.Add(card);
+                    for (int j = 0; j < _cardsSuit.Count; j++)
+                    {
+                        Card card = new Card(_cardsSuit[j], _cardsValue[i]);
+                        _cards.Add(card);
+                    }
                 }
             }
 
             Shuffle();
         }
 
-        public void Shuffle()
+        private void Shuffle()
         {
             Random random = new Random();
 
@@ -272,26 +337,33 @@ namespace Card
             _value = value;
         }
 
-        public string Value => _value;
+        public string CardValue()
+        {
+            string value = _value;
+            return value;
+        }
 
         public void ShowInfo()
         {
 
-            Console.WriteLine($"  {_suit}         |       {_value}       ");
+            Console.WriteLine($"|  {_suit}          |       {_value}      |");
         }
     }
 
     abstract class Person
     {
+
         private int _pointCards = 0;
 
-        private List<Card> _hand = new List<Card>();
+        private List<Card> _cardsOfHand = new List<Card>();
 
-        public bool HaveNotCards
+        public int CardsCount => _cardsOfHand.Count;
+
+        public bool HaveNotCards    ///надо оправдать
         {
             get
             {
-                return _hand.Count() == 0;
+                return _cardsOfHand.Count() == 0;
             }
         }
 
@@ -299,7 +371,7 @@ namespace Card
 
         public void ScorePoints(int pointsCards)
         {
-            _pointCards += pointsCards;
+            _pointCards = pointsCards;
         }
 
         public void GetCard(Card card)
@@ -307,15 +379,21 @@ namespace Card
             Card temporaryCard = card;
             if (temporaryCard != null)
             {
-                _hand.Add(temporaryCard);
+                _cardsOfHand.Add(temporaryCard);
             }
         }
 
-        public void ReturnCards()
+        public string GetCardValue(int index)
         {
-            if (_hand.Count != 0)
+            string valueCardOfHand = _cardsOfHand[index].CardValue();
+            return valueCardOfHand;
+        }
+
+        public void FoldCards()
+        {
+            if (_cardsOfHand.Count != 0)
             {
-                _hand.Clear();
+                _cardsOfHand.Clear();
             }
             else
             {
@@ -327,9 +405,12 @@ namespace Card
         {
             if (HaveNotCards == false)
             {
-                Console.WriteLine("Масть карты  |Значение карты");
+                Console.SetCursorPosition(40, 1);
+                Console.WriteLine(_pointCards);
+                Console.SetCursorPosition(0, 0);
+                Console.WriteLine("|Масть карты  |Значение карты|Количество очков|");
 
-                foreach (var card in _hand)
+                foreach (var card in _cardsOfHand)
                 {
                     card.ShowInfo();
                 }
@@ -338,11 +419,11 @@ namespace Card
 
         public void ShowCardDealerInfo()
         {
-            if (HaveNotCards==false)
+            if (HaveNotCards == false)
             {
                 Console.WriteLine("Масть карты   |Значение карты");
 
-                _hand[0].ShowInfo();
+                _cardsOfHand[0].ShowInfo();
             }
         }
 
@@ -351,6 +432,9 @@ namespace Card
 
     class Player : Person
     {
+        int _bank = 100000;
+
+
 
     }
 
@@ -359,9 +443,10 @@ namespace Card
 
     }
 }
+
 //////if (temporaryCard.Value == "T")
-//сделать  начисление очков 
+//сделать  начисление очков [ok]
 //добавить условия победы, поражения и сделать ничью
 //добавить ставки и сделать страховку 
-//сделать условие хода дилера 
-/////
+//сделать условие хода дилера[ok] 
+//////
