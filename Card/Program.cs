@@ -32,76 +32,113 @@ namespace Card
         {
             const string CommandGetCard = "1";
             const string CommandPassTheMove = "2";
-            const string CommandExitGame = "4";
+            const string CommandExitGame = "3";
 
             bool isWork = true;
 
             while (isWork)
             {
-                Console.Clear();
-                _player.ShowCardsPlayerInfo();
-                _dealer.ShowCardDealerInfo();
-                Console.WriteLine($"{CommandGetCard} взять карту ");
-                Console.WriteLine($"{CommandPassTheMove} Передать ход");
-                Console.WriteLine($"{CommandExitGame} выход из игры ");
+                bool isRunPlayer = false;
 
-                switch (Console.ReadLine())
+                while (isRunPlayer == false)
                 {
-                    case CommandGetCard:
-                        RunThePlayer();
-                        break;
+                    Console.Clear();
+                    _player.ShowAllCardsInfo(0, 0);
+                    _dealer.ShowCardDealerInfo();
 
-                    case CommandPassTheMove:
-                        RunTheDealer();
-                        break;
+                    Console.WriteLine($"{CommandGetCard} взять карту ");
+                    Console.WriteLine($"{CommandPassTheMove} Передать ход");
+                    Console.WriteLine($"{CommandExitGame} выход из игры ");
 
-                    case CommandExitGame:
-                        isWork = false;
-                        break;
+                    switch (Console.ReadLine())
+                    {
+                        case CommandGetCard:
+                            isRunPlayer = RunThePlayer();
+                            break;
 
-                    default:
-                        Console.WriteLine("Неверный ввод");
-                        break;
+                        case CommandPassTheMove:
+                            isRunPlayer = RunTheDealer();
+                            break;
+
+                        case CommandExitGame:
+                            isWork = false;
+                            break;
+
+                        default:
+                            Console.WriteLine("Неверный ввод");
+                            break;
+                    }
                 }
 
 
-                if (AssignVictory())
-                {
+                AssignVictory();
                 StartNextRound();
-
-                }
                 Console.WriteLine("Нажмите любую кнопку для продолжения");
                 Console.ReadLine();
             }
         }
 
-        private void RunThePlayer()
+        private bool RunThePlayer()
         {
             _player.GetCard(_deck.GiveCard());
             GetAllPoints(_player);
+            if (_player.PointCards > 21)
+            {
+                return true;
+            }
+
+            return false;
         }
 
-        private bool AssignVictory()
+        private void AssignVictory()
         {
+            int positionInfoCardsDealer = 47;
+            Console.Clear();
+            _player.ShowAllCardsInfo(0, 0);
+            _dealer.ShowAllCardsInfo(0, positionInfoCardsDealer);
 
-            return;
+            if (_player.PointCards < 21 && _dealer.PointCards < 21 && _player.PointCards == _dealer.PointCards)
+            {
+                Console.WriteLine("ничья");
+            }
+            else if (_player.PointCards < 21 && _dealer.PointCards < 21 && _player.PointCards < _dealer.PointCards)
+            {
+                Console.WriteLine("победа дилера");
+            }
+            else if (_player.PointCards < 21 && _dealer.PointCards < 21 && _player.PointCards > _dealer.PointCards)
+            {
+                Console.WriteLine("победа игрока");
+            }
+            else if (_player.PointCards == 21 && _player.PointCards > _dealer.PointCards)
+            {
+                Console.WriteLine("у игрока  (блэк джек)");
+            }
+            else if (_dealer.PointCards == 21 && _player.PointCards < _dealer.PointCards)
+            {
+                Console.WriteLine("у дилера (блэк джек)");
+            }
+            else if (_player.PointCards == 21 && _dealer.PointCards == 21)
+            {
+                Console.WriteLine("ничья у игрока и у дилера (блэк джек)");
+            }
+            else if (_player.PointCards > 21 && _dealer.PointCards > 21)
+            {
+                Console.WriteLine("//перебор у игрока ");
+            }
+            else if (_player.PointCards < 21 && _dealer.PointCards > 21)
+            {
+                Console.WriteLine("//перебор у дилера");
+            }
         }
 
         public void StartNewRound()
         {
-            
-                SetDecksCount();
-
-                GiveNewDecks();
-
-                GiveStarterCardSet();
-
-                GetAllPoints(_player);
-
-                GetAllPoints(_dealer);
-            
+            SetDecksCount();
+            GiveNewDecks();
+            GiveStarterCardSet();
+            GetAllPoints(_player);
+            GetAllPoints(_dealer);
         }
-
 
         private Dictionary<string, int> CreateBlackJackPoints()
         {
@@ -153,19 +190,18 @@ namespace Card
             person.ScorePoints(points);
         }
 
-        private void RunTheDealer()
+        private bool RunTheDealer()
         {
-            _dealer.ShowCardDealerInfo();
+            const int minThreshold = 16;
 
-            const int minThreshold = 17;
-
-            while (_dealer.PointCards < minThreshold)
+            while (_dealer.PointCards <= minThreshold)
             {
 
                 _dealer.GetCard(_deck.GiveCard());
                 GetAllPoints(_dealer);
             }
 
+            return true;
         }
 
         private void StartNextRound()
@@ -174,22 +210,16 @@ namespace Card
 
             if (_deck.GetCardsCount <= lowerLimitDecks)
             {
-                _dealer.FoldCards();
-                _player.FoldCards();
                 GiveNewDecks();
-
             }
-        }
 
-        private void GivePoints()
-        {
-
+            _dealer.FoldCards();
+            _player.FoldCards();
         }
 
         private void GiveNewDecks()
         {
             _deck = new Deck(_deckCount);
-
         }
 
         private void GiveStarterCardSet()
@@ -205,9 +235,7 @@ namespace Card
 
         private void SetDecksCount()
         {
-
             int tmpCount = GetDeckCount();
-
             _deckCount = tmpCount;
         }
 
@@ -226,7 +254,6 @@ namespace Card
             {
                 Console.Clear();
                 ShowInfoDeckCount(tmpCount, inputKeyCommand, increaseKeyCommand, decreaseKeyCommand);
-
 
                 ConsoleKeyInfo pressedKey = Console.ReadKey();
 
@@ -253,29 +280,22 @@ namespace Card
 
             Console.WriteLine($"Управление количеством колод!\nУменьшить количество колод :{decreaseKey}\nУвеличить количество колод {increaseKey}\nПодтвердить выбор режима {increaseKey}");
             Console.WriteLine($"Режим с {maxCountCard} катры/ми, или {count}: колода/ми! ");
-
-
         }
-
     }
 
     class Deck
     {
 
+        private int _deckCount;
+        private List<Card> _cards = new List<Card>();
         private List<string> _cardsValue = new List<string> { "T", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "D", "K" };
         private List<string> _cardsSuit = new List<string> { "♣", "♠", "♥", "♦" };
-        private int _deckCount;
-
-        private List<Card> _cards = new List<Card>();
 
         public Deck(int deckCount)
         {
             _deckCount = deckCount;
             Fill();
         }
-
-
-
 
         public List<string> CardsValue { get; private set; }
 
@@ -346,14 +366,12 @@ namespace Card
 
         public void ShowInfo()
         {
-
             Console.WriteLine($"|  {_suit}          |       {_value}      |");
         }
     }
 
     abstract class Person
     {
-
         private int _pointCards = 0;
 
         private List<Card> _cardsOfHand = new List<Card>();
@@ -402,7 +420,7 @@ namespace Card
             }
         }
 
-        public void ShowCardsPlayerInfo()
+        public void ShowAllCardsInfo(int positionLeft, int positionTop)
         {
             if (HaveNotCards == false)
             {
@@ -423,12 +441,9 @@ namespace Card
             if (HaveNotCards == false)
             {
                 Console.WriteLine("Масть карты   |Значение карты");
-
                 _cardsOfHand[0].ShowInfo();
             }
         }
-
-
     }
 
     class Player : Person
@@ -442,7 +457,7 @@ namespace Card
 
 //////if (temporaryCard.Value == "T")
 //сделать  начисление очков [ok]
-//добавить условия победы, поражения и сделать ничью
-//добавить ставки и сделать страховку 
+//добавить условия победы, поражения и сделать ничью[ok]
+//добавить ставки и сделать страховку []
 //сделать условие хода дилера[ok] 
 //////
