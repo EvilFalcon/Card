@@ -425,9 +425,7 @@ namespace Card
 
             if (HaveNotCards == false)
             {
-                int positionPointCard = 19;
                 int positionInfoCard = 3+name.Length;
-                int positionTopPointCard = 1;
                 int positionString = 1;
                 Console.SetCursorPosition(positionLeft, positionTopInfoCard - positionString);
                 Console.WriteLine($"|{name}|карты|Кол/во очков: {_pointCards}|");
