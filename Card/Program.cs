@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Card
 {
@@ -12,6 +13,8 @@ namespace Card
 
             casino.StartNewRound();
             casino.PlayGame();
+
+            
         }
     }
 
@@ -40,39 +43,39 @@ namespace Card
             {
                 bool isRunPlayer = false;
 
-                while (isRunPlayer == false)
+                Console.Clear();
+                _player.ShowAllCardsInfo(30);
+                _dealer.ShowCardDealerInfo(0);
+                Console.SetCursorPosition(0, 10);
+                Console.WriteLine($"{CommandGetCard}) взять карту ");
+                Console.WriteLine($"{CommandPassTheMove}) Передать ход");
+                Console.WriteLine($"{CommandExitGame} выход из игры ");
+
+                switch (Console.ReadLine())
                 {
-                    Console.Clear();
-                    _player.ShowAllCardsInfo(0, 0);
-                    _dealer.ShowCardDealerInfo();
+                    case CommandGetCard:
+                        isRunPlayer = RunThePlayer();
+                        break;
 
-                    Console.WriteLine($"{CommandGetCard} взять карту ");
-                    Console.WriteLine($"{CommandPassTheMove} Передать ход");
-                    Console.WriteLine($"{CommandExitGame} выход из игры ");
+                    case CommandPassTheMove:
+                        isRunPlayer = RunTheDealer();
+                        break;
 
-                    switch (Console.ReadLine())
-                    {
-                        case CommandGetCard:
-                            isRunPlayer = RunThePlayer();
-                            break;
+                    case CommandExitGame:
+                        isWork = false;
+                        break;
 
-                        case CommandPassTheMove:
-                            isRunPlayer = RunTheDealer();
-                            break;
-
-                        case CommandExitGame:
-                            isWork = false;
-                            break;
-
-                        default:
-                            Console.WriteLine("Неверный ввод");
-                            break;
-                    }
+                    default:
+                        Console.WriteLine("Неверный ввод");
+                        break;
                 }
 
+                if (isRunPlayer)
+                {
+                    AssignVictory();
+                    StartNextRound();
+                }
 
-                AssignVictory();
-                StartNextRound();
                 Console.WriteLine("Нажмите любую кнопку для продолжения");
                 Console.ReadLine();
             }
@@ -82,6 +85,7 @@ namespace Card
         {
             _player.GetCard(_deck.GiveCard());
             GetAllPoints(_player);
+
             if (_player.PointCards > 21)
             {
                 return true;
@@ -94,40 +98,20 @@ namespace Card
         {
             int positionInfoCardsDealer = 47;
             Console.Clear();
-            _player.ShowAllCardsInfo(0, 0);
-            _dealer.ShowAllCardsInfo(0, positionInfoCardsDealer);
+            _player.ShowAllCardsInfo(30,5);
+            _dealer.ShowAllCardsInfo(0,5, "дилер");
 
-            if (_player.PointCards < 21 && _dealer.PointCards < 21 && _player.PointCards == _dealer.PointCards)
+            if (_player.PointCards > _dealer.PointCards && _player.PointCards <= 21)
+            {
+                Console.WriteLine("победил игрок");
+            }
+            else if (_dealer.PointCards > _player.PointCards && _dealer.PointCards <=21)
+            {
+                Console.WriteLine(" победило казино");
+            }
+            else if (_player.PointCards==_dealer.PointCards&&_player.PointCards<=21)
             {
                 Console.WriteLine("ничья");
-            }
-            else if (_player.PointCards < 21 && _dealer.PointCards < 21 && _player.PointCards < _dealer.PointCards)
-            {
-                Console.WriteLine("победа дилера");
-            }
-            else if (_player.PointCards < 21 && _dealer.PointCards < 21 && _player.PointCards > _dealer.PointCards)
-            {
-                Console.WriteLine("победа игрока");
-            }
-            else if (_player.PointCards == 21 && _player.PointCards > _dealer.PointCards)
-            {
-                Console.WriteLine("у игрока  (блэк джек)");
-            }
-            else if (_dealer.PointCards == 21 && _player.PointCards < _dealer.PointCards)
-            {
-                Console.WriteLine("у дилера (блэк джек)");
-            }
-            else if (_player.PointCards == 21 && _dealer.PointCards == 21)
-            {
-                Console.WriteLine("ничья у игрока и у дилера (блэк джек)");
-            }
-            else if (_player.PointCards > 21 && _dealer.PointCards > 21)
-            {
-                Console.WriteLine("//перебор у игрока ");
-            }
-            else if (_player.PointCards < 21 && _dealer.PointCards > 21)
-            {
-                Console.WriteLine("//перебор у дилера");
             }
         }
 
@@ -196,7 +180,6 @@ namespace Card
 
             while (_dealer.PointCards <= minThreshold)
             {
-
                 _dealer.GetCard(_deck.GiveCard());
                 GetAllPoints(_dealer);
             }
@@ -215,6 +198,8 @@ namespace Card
 
             _dealer.FoldCards();
             _player.FoldCards();
+
+            GiveStarterCardSet();
         }
 
         private void GiveNewDecks()
@@ -231,6 +216,9 @@ namespace Card
                 _player.GetCard(_deck.GiveCard());
                 _dealer.GetCard(_deck.GiveCard());
             }
+
+            GetAllPoints(_player);
+            GetAllPoints(_dealer);
         }
 
         private void SetDecksCount()
@@ -287,7 +275,7 @@ namespace Card
     {
 
         private int _deckCount;
-        private List<Card> _cards = new List<Card>();
+        private  List<Card> _cards = new List<Card>();
         private List<string> _cardsValue = new List<string> { "T", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "D", "K" };
         private List<string> _cardsSuit = new List<string> { "♣", "♠", "♥", "♦" };
 
@@ -297,13 +285,11 @@ namespace Card
             Fill();
         }
 
-        public List<string> CardsValue { get; private set; }
-
         public int GetCardsCount => _cards.Count();
 
         public Card GiveCard()
         {
-            if (_cards.Count != 0)
+            if (GetCardsCount != 0)
             {
                 Card temporaryCard = _cards.Last();
                 _cards.Remove(temporaryCard);
@@ -366,7 +352,7 @@ namespace Card
 
         public void ShowInfo()
         {
-            Console.WriteLine($"|  {_suit}          |       {_value}      |");
+            Console.WriteLine($"|{_suit}{_value}|");
         }
     }
 
@@ -378,7 +364,7 @@ namespace Card
 
         public int CardsCount => _cardsOfHand.Count;
 
-        public bool HaveNotCards    ///надо оправдать
+        private bool HaveNotCards    ///надо оправдать
         {
             get
             {
@@ -420,29 +406,37 @@ namespace Card
             }
         }
 
-        public void ShowAllCardsInfo(int positionLeft, int positionTop)
+        public void ShowAllCardsInfo(int positionLeft, int positionTop=1, string name = "игрок")
         {
+
             if (HaveNotCards == false)
             {
-                Console.SetCursorPosition(40, 1);
-                Console.WriteLine(_pointCards);
-                Console.SetCursorPosition(0, 0);
-                Console.WriteLine("|Масть карты  |Значение карты|Количество очков|");
+
+                Console.SetCursorPosition(positionLeft, positionTop-1);
+                Console.WriteLine($"|{name}|карты|Количество очков|");
+                Console.SetCursorPosition(positionLeft + 19, positionTop+1);
+                Console.WriteLine($"{_pointCards}");
 
                 foreach (var card in _cardsOfHand)
                 {
+                    Console.SetCursorPosition(positionLeft+9, positionTop);
                     card.ShowInfo();
+                    positionTop++;
                 }
+
+                Console.SetCursorPosition(0, 0);
             }
         }
 
-        public void ShowCardDealerInfo()
+        public void ShowCardDealerInfo(int positionLeft)
         {
             if (HaveNotCards == false)
             {
-                Console.WriteLine("Масть карты   |Значение карты");
+                Console.WriteLine("|Карты дилера|");
                 _cardsOfHand[0].ShowInfo();
             }
+
+            Console.SetCursorPosition(0, 0);
         }
     }
 
@@ -454,6 +448,8 @@ namespace Card
     {
     }
 }
+
+
 
 //////if (temporaryCard.Value == "T")
 //сделать  начисление очков [ok]
