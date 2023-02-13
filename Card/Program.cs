@@ -110,15 +110,15 @@ namespace Card
 
             if (_player.PointCards > _dealer.PointCards && _player.PointCards <= _maxPointCards)
             {
-                Console.WriteLine("победил игрок");
+                Console.WriteLine("Победил игрок");
             }
             else if (_dealer.PointCards > _player.PointCards && _dealer.PointCards <= _maxPointCards)
             {
-                Console.WriteLine(" победило казино");
+                Console.WriteLine(" Победило казино");
             }
             else if (_player.PointCards == _dealer.PointCards && _player.PointCards <= _maxPointCards)
             {
-                Console.WriteLine("ничья");
+                Console.WriteLine("Ничья");
             }
         }
 
